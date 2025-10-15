@@ -8,10 +8,10 @@ import cv2
 from tqdm import tqdm
 from py_sod_metrics import MAE, Emeasure, Fmeasure, Smeasure, WeightedFmeasure
 
-method = 'MyNet 13'
-for _data_name in ['AUG']:
-    mask_root = r'D:\object\my code2\Data\{}\test\masks'.format(_data_name)
-    pred_root = r'D:\object\my code2\MYNet-master\MyNet-main\results\{}\test'.format(_data_name)
+method = ''
+for _data_name in ['']:
+    mask_root = r''.format(_data_name)
+    pred_root = r't'.format(_data_name)
     mask_name_list = sorted(os.listdir(mask_root))
     FM = Fmeasure()
     WFM = WeightedFmeasure()

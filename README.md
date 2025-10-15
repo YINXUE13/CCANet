@@ -1,1 +1,1 @@
-CCANet: Contextual Collaborative Aggregation Network for Lightweight Surface Defect Detection
+# CCANet: Contextual Collaborative Aggregation Network for Lightweight Surface Defect Detection

@@ -11,7 +11,7 @@ from py_sod_metrics import MAE, Emeasure, Fmeasure, Smeasure, WeightedFmeasure
 method = 'MyNet 13'
 for _data_name in ['AUG']:
     mask_root = r'D:\object\my code2\Data\{}\test\masks'.format(_data_name)
-    pred_root = r'D:\object\my code2\MYNet-master-65-EB0\MyNet-main\results\{}\test'.format(_data_name)
+    pred_root = r'D:\object\my code2\MYNet-master\MyNet-main\results\{}\test'.format(_data_name)
     mask_name_list = sorted(os.listdir(mask_root))
     FM = Fmeasure()
     WFM = WeightedFmeasure()

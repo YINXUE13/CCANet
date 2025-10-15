@@ -70,14 +70,13 @@ class MyNet(nn.Module):
         s4 = self.upsample4(self.conv_out4(a4))
         s5 = self.upsample5(self.conv_out5(a5))
 
-        ff5 = self.upsample5(ff5)
         # print('s1.shape', s1.shape)
         # print('s2.shape', s2.shape)
         # print('s3.shape', s3.shape)
         # print('s4.shape', s4.shape)
         # print('s5.shape', s5.shape)
 
-        return s1, torch.sigmoid(s1), s2, torch.sigmoid(s2), s3, torch.sigmoid(s3), s4, torch.sigmoid(s4), s5, torch.sigmoid(s5),ff5
+        return s1, torch.sigmoid(s1), s2, torch.sigmoid(s2), s3, torch.sigmoid(s3), s4, torch.sigmoid(s4), s5, torch.sigmoid(s5)
 
 
 if __name__ == "__main__":
@@ -88,4 +87,5 @@ if __name__ == "__main__":
     flops, params = profile(model, (dummy_input,))
     print('flops: ', flops, 'params: ', params)
     print('flops: %.2f G, params: %.2f M' % (flops / 1e9, params / 1e6))
+
 

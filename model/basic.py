@@ -179,81 +179,6 @@ class ADB(nn.Module):
         return out
 
 
-###########  MAM  ############
-
-class SA(nn.Module):
-    def __init__(self, kernel_size=7):
-        super(SA, self).__init__()
-
-        assert kernel_size in (3, 7), 'kernel size must be 3 or 7'
-        padding = 3 if kernel_size == 7 else 1
-
-        self.conv1 = nn.Conv2d(2, 1, kernel_size, padding=padding, bias=False)
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x):
-        avg_out = torch.mean(x, dim=1, keepdim=True)
-        max_out, _ = torch.max(x, dim=1, keepdim=True)
-        x = torch.cat([avg_out, max_out], dim=1)
-        x = self.conv1(x)
-        return self.sigmoid(x)
-
-
-class MAM(nn.Module):
-    def __init__(self, in_channel, out_channel):
-        super(MAM, self).__init__()
-        self.conv1 = nn.Conv2d(in_channel * 2, in_channel, kernel_size=1, stride=1)
-
-        # 保持原来的池化定义
-        self.pool_h = nn.AdaptiveAvgPool2d((None, 1))  # 高度池化
-        self.pool_w = nn.AdaptiveAvgPool2d((1, None))  # 宽度池化
-
-        self.conv2 = nn.Conv2d(in_channel, 8, kernel_size=1, stride=1)
-        self.bn = nn.BatchNorm2d(8)
-        self.re = nn.ReLU(inplace=True)
-
-        # 通道注意力卷积
-        self.conv_h = nn.Conv2d(8, out_channel, kernel_size=1, stride=1)
-        self.conv_w = nn.Conv2d(8, out_channel, kernel_size=1, stride=1)
-
-        # 空间注意力
-        self.sa = SA()
-
-    def forward(self, x, y):
-        # 合并输入 x 和 y
-        x1 = self.conv1(torch.cat([x, y], dim=1))  # (N, C, H, W)
-
-        # 获取输入的高和宽
-        H, W = x1.shape[2], x1.shape[3]
-
-        # 高度和宽度分别应用池化
-        x_h = self.pool_h(x1)  # (N, C, H, 1) -> 变为 (N, C, H, 1)
-        x_w = self.pool_w(x1)  # (N, C, 1, W) -> 变为 (N, C, 1, W)
-
-        # 合并并进行卷积处理
-        z_x = torch.cat([x_h, x_w.permute(0, 1, 3, 2)], dim=2)  # (N, C, H + W, 1)
-        z_y = torch.cat([x_h.permute(0, 1, 3, 2), x_w], dim=3)  # (N, C, 1, H + W)
-
-        # 卷积处理
-        z_x = self.re(self.bn(self.conv2(z_x)))  # (N, 8, H + W, 1)
-        z_y = self.re(self.bn(self.conv2(z_y)))  # (N, 8, 1, H + W)
-
-        target_h = H
-        target_w = W
-
-        z_x = F.interpolate(z_x, size=(target_h, 1), mode='bilinear', align_corners=False)  # 压缩到 (N, 8, H/2, 1)
-        z_y = F.interpolate(z_y, size=(1, target_w), mode='bilinear', align_corners=False)  # 压缩到 (N, 8, 1, W/2)
-
-        # 注意力计算
-        z_h = self.conv_h(z_x).sigmoid()  # 通道注意力
-        z_w = self.conv_w(z_y).sigmoid()  # 通道注意力
-
-        # 进一步应用空间和通道注意力
-        out = self.sa(x1 * z_h * z_w)  # 空间注意力
-        out = x.mul(out) + x + y  # 最终输出
-        return out
-
-
 ###########  ASM  ############
 class WithBias_LayerNorm(nn.Module):
     def __init__(self, normalized_shape):
@@ -512,26 +437,3 @@ class FIFM(nn.Module):
         out = self.conv1x1(out)
 
         return out
-
-if __name__ == "__main__":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = ASM(32,4).to(device)
-    x = torch.randn(2, 32, 22, 22).to(device)
-    y = torch.randn(2, 32, 22, 22).to(device)
-    out = model(x,y)
-    print(out.shape)
-    # x = torch.randn(1, 32, 22, 22).to(device)
-    # y = torch.randn(1, 32, 176, 176).to(device)
-    # z = torch.randn(1, 32, 11, 11).to(device)
-    # out,b = model(x, y, z)
-    # print(out.shape)
-    # print(b.shape)
-    # dummy_input_x = torch.randn(1, 320, 22, 22).to(device)
-    # dummy_input_y = torch.randn(1, 16, 176, 176).to(device)
-    # dummy_input_z = torch.randn(1, 32, 11, 11).to(device)
-    #
-    # # 传递多个输入给 profile 函数
-    # flops, params = profile(model, (dummy_input_x, dummy_input_y, dummy_input_z))
-
-    # print('flops: ', flops, 'params: ', params)
-    # print('flops: %.2f G, params: %.2f M' % (flops / 1000000000.0, params / 1000000.0))

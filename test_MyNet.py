@@ -17,18 +17,17 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--testsize', type=int, default=352, help='testing size')
 opt = parser.parse_args()
 
-dataset_path = 'D:/object/my code2/Data/ESD/'
+dataset_path = ''
 
 # 加载模型
 model = MyNet()
-model.load_state_dict(torch.load('./trained_models/ESD/'))
+model.load_state_dict(torch.load(''))
 
 model.cuda()
 model.eval()
 
 test_datasets = ['test']
 
-# 数据预处理和后处理
 def preprocess_image(image, gt):
     gt = np.asarray(gt, np.float32)
     gt /= (gt.max() + 1e-8)

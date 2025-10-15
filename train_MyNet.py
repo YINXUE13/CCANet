@@ -4,7 +4,7 @@ from torch.autograd import Variable
 import numpy as np
 import os, argparse, logging
 from datetime import datetime
-from model.MyNet_EB1 import MyNet  # 请确保你的 MyNet19 模型路径正确
+from model.MyNet_EB1 import MyNet
 from data import get_loader
 from utils.utils import clip_gradient, adjust_lr, AvgMeter
 import pytorch_iou
@@ -57,7 +57,7 @@ def train(train_loader, model, optimizer, epoch, total_step, opt):
                                 loss2.data))
 
     # 模型保存
-    save_path = './trained_models_352/ORSSD-1/'
+    save_path = ''
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     if epoch % 5 == 0 or epoch >= 40:
@@ -77,16 +77,14 @@ def main():
 
     logging.info(f'Learning Rate: {opt.lr}')
 
-    # build models
     model = MyNet()
-    #model.load_state_dict(torch.load(r'D:\object\my code2\MYNet-master-62\MyNet-main\trained_models_352\AUG\MYNet.10.pth'))
     model.cuda()
     params = model.parameters()
     optimizer = torch.optim.Adam(params, opt.lr)
     print('Total params: %.2fM' % (sum(p.numel() for p in model.parameters()) / 1000000.0))
 
-    image_root = 'D:/object/my code2/Dataother/ORSSD/train/imgs/'
-    gt_root = 'D:/object/my code2/Dataother/ORSSD/train/masks/'
+    image_root = ''
+    gt_root = ''
     train_loader = get_loader(image_root, gt_root, batchsize=opt.batchsize, trainsize=opt.trainsize)
     total_step = len(train_loader)
 
